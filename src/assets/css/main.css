@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg1: #eee8f6;
+  --bg2: #adbada;
+  --bg3: #8697c3;
+  --bg4: #3d52a1;
+}
+body {
+  font-family: Arial, sans-serif;
+  background-color: var(--bg1);
+  width: 100% !important;
+  position: relative;
+  min-height: 100vh;
+  box-sizing: border-box;
+  font-family: "Roboto", sans-serif !important;
+  font-weight: 300;
+}
+h1 {
+  font-size: 20px;
+  font-weight: bold;
+}
+h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+input::placeholder {
+  /* color: black; */
+}
+
+.headerSec {
+  position: relative;
+  padding: 15px 3px 7px 3px !important;
+  background-color: #b0b0b0;
+  /* color: #fff !important; */
+}
+.svgClose {
+  position: absolute;
+  right: 36%;
+  margin: auto;
+  bottom: -125%;
+  box-sizing: inherit;
+}
+.fontPlaywrite {
+  font-family: "Playwrite CU", cursive;
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
+}
+.white {
+  color: #fff;
+}
+
+/* data tables */
+/* #myTable_wrapper {
+  max-height: 400px;
+  overflow: scroll;
+} */
+#myTable_wrapper,
+#myTable_wrapper button {
+  background-color: #b8b8dc !important;
+  color: #000000 !important;
+  padding: 5px;
+}
+#myTable_wrapper select,
+#myTable_wrapper input {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+.loaderDiv {
+  display: flex;
+  background-color: #ffffff;
+  z-index: 999;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+input {
+  width: 100%;
+  padding: 5px;
+  border-radius: 9px;
+  /* background-color: #cac4ca !important; */
+  color: #000;
+  border: none;
+  /* outline: none; */
+}
+@media only screen and (max-width: 600px) {
+  body {
+  }
+}
+@media (min-width: 900px) {
+  .tabsHome {
+    margin-right: auto !important;
+    margin-left: auto;
+    /* margin: auto auto auto 2%; */
+  }
+}
