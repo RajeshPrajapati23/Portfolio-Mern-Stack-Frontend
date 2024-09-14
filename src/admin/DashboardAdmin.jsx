@@ -8,6 +8,8 @@ import Loader from "../pages/Loader";
 import { confirmAlert } from "react-confirm-alert"; // Import
 import "react-confirm-alert/src/react-confirm-alert.css"; // Import css
 // import socket from "../socket/socket";
+import "cropperjs/dist/cropper.css";
+import UploadImg from "../common/UploadImg";
 
 const FlexDiv = styled.div`
   display: flex;
@@ -47,10 +49,11 @@ const AdminDashboard = () => {
   const [state, setState] = useState({
     title: "",
     description: "",
-    file: "",
+    base64: "",
     id: "", //uniqe id of project
     show: false,
     projects: [],
+    portfolioUrl: "",
     loader: true,
   });
   const { VITE_APIKEY } = import.meta.env;
@@ -93,31 +96,32 @@ const AdminDashboard = () => {
     const { name, value } = e.target;
     setState({ ...state, [name]: value });
   };
-  const inputFileHandler = (e) => {
-    const file = e.target.files[0];
-    setState({ ...state, file });
-  };
+
   const addProject = async (e) => {
     e.preventDefault();
 
-    const { title, description, file } = state;
-    if (!file || !title || !description) {
+    const { title, description, base64, portfolioUrl } = state;
+    if (!base64 || !title || !description || !portfolioUrl) {
       toastCustm(false, "", "All Fields are Required");
       return;
     }
     setState((prev) => ({ ...prev, show: false, loader: true }));
 
-    const formData = new FormData();
-    formData.append("file", file); // Append the file to formData
-    formData.append("title", title); // Append the file to formData
-    formData.append("description", description); // Append the file to formData
-
     try {
-      const res = await axios.post(VITE_APIKEY + "/api/project/add", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data", // Required for file upload
+      const res = await axios.post(
+        VITE_APIKEY + "/api/project/add",
+        {
+          base64,
+          title,
+          description,
+          portfolioUrl,
         },
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       console.log(res.data); // Handle the response from the server
       setState((prev) => ({
         ...prev,
@@ -136,11 +140,26 @@ const AdminDashboard = () => {
   };
   const onEditModal = (data) => {
     addEdit.current = "Edit";
-    const { title, description, file } = data;
-    setState({ ...state, title, description, file, id: data._id, show: true });
+    const { title, description, base64, portfolioUrl } = data;
+    setState({
+      ...state,
+      title,
+      description,
+      base64,
+      portfolioUrl,
+      id: data._id,
+      show: true,
+    });
   };
   const onCloseModal = () => {
-    setState({ ...state, title: "", description: "", file: "", show: false });
+    setState({
+      ...state,
+      title: "",
+      description: "",
+      base64: "",
+      portfolioUrl: "",
+      show: false,
+    });
   };
   const deleteProject = async (id) => {
     setState((prev) => ({ ...prev, loader: true }));
@@ -151,7 +170,7 @@ const AdminDashboard = () => {
 
         {
           headers: {
-            "Content-Type": "multipart/form-data", // Required for file upload
+            "Content-Type": "multipart/form-data", // Required for base64 upload
           },
         }
       );
@@ -193,28 +212,20 @@ const AdminDashboard = () => {
   const editProject = async (id) => {
     console.log("id", id);
 
-    const { title, description, file } = state;
-    if (!title || !description) {
+    const { title, description, base64, portfolioUrl } = state;
+    if (!title || !description || !portfolioUrl) {
       toastCustm(false, "", "All Fields are Required");
       return;
     }
     setState((prev) => ({ ...prev, show: false, loader: true }));
 
-    const formData = new FormData();
-    if (file) {
-      formData.append("file", file); // Append the file to formData
-    }
-    formData.append("title", title); // Append the file to formData
-    formData.append("description", description); // Append the file to formData
-    formData.append("id", id); // Append the file to formData
-
     try {
       const res = await axios.put(
         VITE_APIKEY + "/api/project/update",
-        formData,
+        { id, base64, title, description, portfolioUrl },
         {
           headers: {
-            "Content-Type": "multipart/form-data", // Required for file upload
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -231,16 +242,20 @@ const AdminDashboard = () => {
     }
   };
   console.log(state);
-  console.log(addEdit.current);
-  const { show, title, description, file, loader } = state;
+
+  const onBase64 = (data) => {
+    setState((prev) => ({ ...prev, base64: data }));
+  };
+  const { show, title, description, base64, portfolioUrl, loader } = state;
   return (
     <div>
       {loader && <Loader />}
+
       <FlexDiv>
         <Btn onClick={onAddModal}>Add Project</Btn>
       </FlexDiv>
       <ProjectCont>
-        <H2Style className="white">Project List</H2Style>
+        <H2Style>Project List</H2Style>
       </ProjectCont>
       <table id="myTable" className="display">
         <thead>
@@ -248,6 +263,7 @@ const AdminDashboard = () => {
             <th>Image</th>
             <th>Title</th>
             <th>Description</th>
+            <th>Url</th>
             <th>Edit</th>
             <th>Delete</th>
           </tr>
@@ -258,13 +274,14 @@ const AdminDashboard = () => {
               <td>
                 <img
                   src={data.image?.url}
-                  style={{ height: "30px" }}
+                  style={{ width: "100px" }}
                   alt=""
                   loading="lazy"
                 />
               </td>
               <td>{data.title}</td>
               <td>{data.description}</td>
+              <td>{data.portfolioUrl}</td>
               <td onClick={() => onEditModal(data)}>
                 <span className="material-symbols-outlined cursor-pointer">
                   edit_square
@@ -279,6 +296,7 @@ const AdminDashboard = () => {
           ))}
         </tbody>
       </table>
+
       <Modal show={show} onHide={onCloseModal}>
         <Modal.Header closeButton style={{ backgroundColor: "#EEE8F6" }}>
           <h1 className="text-2xl text-blue4"> {addEdit.current} Project</h1>
@@ -291,7 +309,7 @@ const AdminDashboard = () => {
                 type="text"
                 name="title"
                 value={title}
-                placeholder="Enter Title"
+                placeholder="Project Name"
                 onChange={inputHadler}
               />
             </div>
@@ -301,20 +319,26 @@ const AdminDashboard = () => {
                 type="text"
                 name="description"
                 value={description}
-                placeholder="Enter Description"
+                placeholder="Using Mern"
+                onChange={inputHadler}
+              />
+            </div>
+            <div style={{ marginTop: "5px" }}>
+              <label>Project Url</label>
+              <input
+                type="text"
+                name="portfolioUrl"
+                value={portfolioUrl}
+                placeholder="https://live-class-project-18-educational.netlify.app/ "
                 onChange={inputHadler}
               />
             </div>
             <div style={{ marginTop: "5px" }}>
               <label>Upload Image</label>
-              <input
-                type="file"
-                name="file"
-                placeholder="Upload Image"
-                onChange={inputFileHandler}
-              />
+
+              <UploadImg getbase64={onBase64} />
             </div>
-            <div style={{ marginTop: "5px" }}>
+            <div style={{ marginTop: "10px", textAlign: "center" }}>
               <Btn
                 style={{ textAlign: "center" }}
                 onClick={
